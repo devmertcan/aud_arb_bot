@@ -1,8 +1,6 @@
 from __future__ import annotations
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import JSONResponse, HTMLResponse
-from typing import List
-from core.types import Opportunity
 import asyncio
 
 def make_app(latest_fn, subscribe_fn):
@@ -14,7 +12,8 @@ def make_app(latest_fn, subscribe_fn):
 
     @app.get("/opps/latest")
     async def latest(limit: int = 50):
-        return [o.model_dump() for o in latest_fn(limit)]
+        # returns a mixed list of cex and tri dicts
+        return [o for o in latest_fn(limit)]
 
     html = """
     <!doctype html><html><body>
@@ -23,10 +22,16 @@ def make_app(latest_fn, subscribe_fn):
     <script>
       const log = document.getElementById('log');
       const ws = new WebSocket(`ws://${location.host}/stream`);
+      function line(d){
+        if(d.kind === 'tri'){
+          return `[${new Date(d.ts*1000).toISOString()}] TRI ${d.exchange}  ${d.path.join('->')}  net_bps=${d.net_bps}  AUD=${d.profit_aud}  conf=${d.confidence.toFixed(2)}\\n`;
+        } else {
+          return `[${new Date(d.ts*1000).toISOString()}] CEX ${d.pair}  BUY ${d.buy_ex} @ ${d.buy_price}  → SELL ${d.sell_ex} @ ${d.sell_price}  net_bps=${d.net_bps}  AUD=${d.profit_aud}  conf=${d.confidence.toFixed(2)}\\n`;
+        }
+      }
       ws.onmessage = (ev) => {
         const data = JSON.parse(ev.data);
-        const s = `[${new Date(data.ts*1000).toISOString()}] ${data.pair}  BUY ${data.buy_ex} @ ${data.buy_price}  → SELL ${data.sell_ex} @ ${data.sell_price}  net_bps=${data.net_bps}  AUD=${data.profit_aud}\n`;
-        log.textContent = s + log.textContent;
+        log.textContent = line(data) + log.textContent;
       }
     </script>
     </body></html>
@@ -44,7 +49,7 @@ def make_app(latest_fn, subscribe_fn):
         try:
             while True:
                 data = await queue.get()
-                await ws.send_json(data.model_dump())
+                await ws.send_json(data)
         except Exception:
             pass
         finally:

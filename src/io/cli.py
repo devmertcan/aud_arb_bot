@@ -1,9 +1,8 @@
 from __future__ import annotations
-import asyncio, yaml, os
+import asyncio, yaml
 from pathlib import Path
 from decimal import Decimal as D
-from typing import List, Callable
-from core.types import RuntimeConfig, BestBook, Opportunity
+from core.types import RuntimeConfig, BestBook, Opportunity, TriOpportunity
 from core.fees import Fees
 from core.utils import now_s
 from md.aggregator import Aggregator
@@ -11,6 +10,7 @@ from md.ws_client import run_ws_exchange
 from md.rest_client import run_rest_exchange
 from io.csv_sink import CsvSink
 from arb.engine import Detector
+from arb.triangular import TriDetector
 from io.dashboard_api import make_app
 import uvicorn
 
@@ -23,10 +23,10 @@ def load_yaml(p: Path):
 
 def load_runtime() -> RuntimeConfig:
     d = load_yaml(CONFIG / "runtime.yml")["runtime"]
-    # coerce numerics to Decimal where needed
     d["max_trade_aud"] = D(str(d["max_trade_aud"]))
     d["min_profit_bps_after_fees"] = D(str(d["min_profit_bps_after_fees"]))
     d["slippage_bps_buffer"] = D(str(d["slippage_bps_buffer"]))
+    d["tri_start_aud"] = D(str(d["tri_start_aud"]))
     return RuntimeConfig(**d)
 
 async def run():
@@ -37,23 +37,45 @@ async def run():
 
     agg = Aggregator()
     sink = CsvSink(OUT)
-    # write all top-of-book snapshots to CSV (optional but handy)
-    agg.subscribe(lambda b: sink.write_tob(b))
 
-    # publish function used by detector
-    latest: list[Opportunity] = []
-    subs: list = []
+    # Lists for dashboard "latest"
+    latest: list[dict] = []
+    subs: list[asyncio.Queue] = []
 
-    def publish_opp(opp: Opportunity):
-        sink.write_opp(opp)
-        latest.insert(0, opp)
+    # --- publishers (to CSV + dashboard) ---
+    def broadcast(payload: dict):
+        # keep a mixed rolling list of last 500 events
+        latest.insert(0, payload)
         if len(latest) > 500:
             latest.pop()
+        # non-blocking broadcast
+        for q in list(subs):
+            if not q.full():
+                q.put_nowait(payload)
 
-    detector = Detector(fees, cfg, publish_opp)
+    def publish_cex(o: Opportunity):
+        sink.write_opp(o)
+        broadcast(o.model_dump())
 
-    # feed detector whenever any book arrives, then scan only that pair quickly
-    agg.subscribe(lambda b: (detector.on_book(b), detector.scan_pair(b.pair)))
+    def publish_tri(t: TriOpportunity):
+        sink.write_tri(t)
+        broadcast(t.model_dump())
+
+    # --- detectors ---
+    cex_detector = Detector(fees, cfg, publish_cex)
+    tri_detector = TriDetector(fees, cfg, publish_tri)
+
+    # write all top-of-book snapshots + feed detectors
+    def on_book(b: BestBook):
+        sink.write_tob(b)
+        cex_detector.on_book(b)
+        tri_detector.on_book(b)
+        # fast per-pair CEX scan
+        cex_detector.scan_pair(b.pair)
+        # fast per-exchange TRI scan
+        tri_detector.scan_exchange(b.exchange, start_aud=cfg.tri_start_aud)
+
+    agg.subscribe(on_book)
 
     async def spawn_exchange(eid: str, use_ws: bool):
         if use_ws:
@@ -67,29 +89,20 @@ async def run():
     def latest_fn(n: int):
         return latest[:n]
 
-    def subscribe_fn(queue):
-        # Register a subscriber; return an unsubscribe
+    def subscribe_fn(queue: asyncio.Queue):
         subs.append(queue)
         def unsub():
-            subs.remove(queue)
+            try:
+                subs.remove(queue)
+            except ValueError:
+                pass
         return unsub
 
-    # broadcast to dashboard subscribers when an opp is published
-    old_publish = publish_opp
-    def publish_and_broadcast(opp: Opportunity):
-        old_publish(opp)
-        for q in list(subs):
-            if not q.full():
-                q.put_nowait(opp)
-    detector.publish_opp = publish_and_broadcast  # swap in
-
-    # run dashboard
     app = make_app(latest_fn, subscribe_fn)
     config = uvicorn.Config(app=app, host=cfg.dashboard_host, port=cfg.dashboard_port, log_level="info")
     server = uvicorn.Server(config)
     tasks.append(asyncio.create_task(server.serve()))
 
-    # keep alive
     try:
         await asyncio.gather(*tasks)
     except asyncio.CancelledError:
