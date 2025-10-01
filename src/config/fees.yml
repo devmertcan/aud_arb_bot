@@ -1,0 +1,15 @@
+maker_bps:
+  coinspot: 20
+  swyftx: 40
+  btcmarkets: 20
+  independentreserve: 50
+  kraken: 26
+  okx: 8
+
+taker_bps:
+  coinspot: 100
+  swyftx: 60
+  btcmarkets: 50
+  independentreserve: 100
+  kraken: 40
+  okx: 10

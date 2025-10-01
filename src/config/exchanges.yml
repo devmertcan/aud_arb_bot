@@ -1,0 +1,19 @@
+exchanges:
+  - id: coinspot
+    enabled: true
+    use_ws: true     # set to true only if ccxt.pro is available for this venue
+  - id: swyftx
+    enabled: true
+    use_ws: true
+  - id: btcmarkets
+    enabled: true
+    use_ws: true
+  - id: independentreserve
+    enabled: true
+    use_ws: true
+  - id: kraken
+    enabled: true
+    use_ws: true
+  - id: okx
+    enabled: true
+    use_ws: true

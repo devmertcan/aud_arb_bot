@@ -1,0 +1,10 @@
+runtime:
+  max_trade_aud: 250               # Chris’ starting cap
+  min_profit_bps_after_fees: 70    # 0.7%
+  min_confidence: 0.60
+  stale_ms: 1000
+  slippage_bps_buffer: 5
+  rest_poll_ms: 500                # REST fallback cadence
+  csv_flush_every: 1               # seconds
+  dashboard_host: "0.0.0.0"
+  dashboard_port: 8000
