@@ -1,19 +1,27 @@
 exchanges:
-  - id: coinspot
-    enabled: true
-    use_ws: true     # set to true only if ccxt.pro is available for this venue
-  - id: swyftx
-    enabled: true
-    use_ws: true
-  - id: btcmarkets
-    enabled: true
-    use_ws: true
-  - id: independentreserve
-    enabled: true
-    use_ws: true
-  - id: kraken
-    enabled: true
-    use_ws: true
+  # CCXT & CCXT.pro (WS) supported
   - id: okx
     enabled: true
     use_ws: true
+
+  - id: kraken
+    enabled: true
+    use_ws: true
+
+  # CCXT REST supported; CCXT.pro WS typically not available → REST only
+  - id: btcmarkets
+    enabled: true
+    use_ws: false
+
+  - id: independentreserve
+    enabled: true
+    use_ws: false
+
+  # Not in CCXT standard → disable for now (needs custom native integration)
+  - id: coinspot
+    enabled: false
+    use_ws: false
+
+  - id: swyftx
+    enabled: false
+    use_ws: false

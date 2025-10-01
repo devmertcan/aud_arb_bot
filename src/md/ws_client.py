@@ -12,8 +12,8 @@ except Exception:
     ccxtpro = None
 
 async def run_ws_exchange(ex_id: str, pairs: List[str], on_book: Callable[[BestBook], None]):
-    if ccxtpro is None:
-        return  # ccxt.pro not installed
+    if ccxtpro is None or not hasattr(ccxtpro, ex_id):
+        raise RuntimeError(f"ccxt.pro WebSocket not available for '{ex_id}'")
     ex = getattr(ccxtpro, ex_id)({"enableRateLimit": True})
     try:
         await ex.load_markets()
