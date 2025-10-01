@@ -6,3 +6,4 @@ secrets.env
 .DS_Store
 *.swp
 .env
+out/
