@@ -1,0 +1,12 @@
+ccxt>=4.3.78
+orjson>=3.10.7
+pydantic>=2.8.2
+pandas>=2.2.2
+pyyaml>=6.0.2
+fastapi>=0.114.1
+uvicorn>=0.30.6
+aiofiles>=24.1.0
+rich>=13.8.1
+
+[:platform_system != "Windows"]
+uvloop>=0.20.0

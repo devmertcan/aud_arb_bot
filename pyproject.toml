@@ -2,7 +2,7 @@
 name = "aud-arb-bot"
 version = "0.1.0"
 description = "AUD cross-exchange and triangular arbitrage detector (Milestone 1)"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
   "ccxt>=4.3.78",
   "orjson>=3.10.7",
