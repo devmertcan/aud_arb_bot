@@ -1,26 +1,28 @@
 exchanges:
-  # CCXT & CCXT.pro (WS) supported
   - id: okx
     enabled: true
     use_ws: true
+    ob_limit: 5        # OKX supports 5
 
   - id: kraken
     enabled: true
     use_ws: true
+    ob_limit: 10       # KRAKEN REQUIRES one of {10,25,100,500,1000}
 
-  # CCXT REST supported; CCXT.pro WS typically not available → REST only
   - id: btcmarkets
     enabled: true
-    use_ws: false
+    use_ws: false      # REST only
+    ob_limit: 10       # safe default for REST fetchOrderBook
 
   - id: independentreserve
     enabled: true
     use_ws: false
+    ob_limit: 10
 
-  # Not in CCXT standard → disable for now (needs custom native integration)
   - id: coinspot
-    enabled: false
+    enabled: true
     use_ws: false
+    ob_limit: 10
 
   - id: swyftx
     enabled: false

@@ -1,3 +1,10 @@
+
+import ccxt
+try:
+    import ccxt.pro as ccxtpro
+except Exception:
+    ccxtpro = None
+
 from __future__ import annotations
 import asyncio, yaml
 from pathlib import Path
@@ -13,11 +20,6 @@ from arb.engine import Detector
 from arb.triangular import TriDetector
 from src.io.dashboard_api import make_app
 import uvicorn
-import ccxt
-try:
-    import ccxt.pro as ccxtpro
-except Exception:
-    ccxtpro = None
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,7 +85,7 @@ async def run():
 
     agg.subscribe(on_book)
 
-    async def spawn_exchange(eid: str, use_ws: bool):
+    async def spawn_exchange(eid: str, use_ws: bool, ob_limit: int | None):
         # Decide capabilities
         ws_supported = bool(ccxtpro) and hasattr(ccxtpro, eid)
         rest_supported = hasattr(ccxt, eid)
@@ -91,18 +93,18 @@ async def run():
         if use_ws and ws_supported:
             print(f"[INFO] {eid}: using WebSocket via ccxt.pro")
             try:
-                await run_ws_exchange(eid, pairs, agg.on_book)
+                await run_ws_exchange(eid, pairs, agg.on_book, ob_limit=ob_limit)
                 return
             except Exception as e:
                 print(f"[WARN] {eid}: WS failed ({e}); falling back to REST…")
 
         if rest_supported:
             print(f"[INFO] {eid}: using REST via ccxt")
-            await run_rest_exchange(eid, pairs, cfg.rest_poll_ms, agg.on_book)
+            await run_rest_exchange(eid, pairs, cfg.rest_poll_ms, agg.on_book, ob_limit=ob_limit)
         else:
             print(f"[WARN] {eid}: not supported by CCXT/ccxt.pro — skipping")
 
-    tasks = [asyncio.create_task(spawn_exchange(e["id"], bool(e.get("use_ws", False)))) for e in exs]
+    tasks = [asyncio.create_task(spawn_exchange(e["id"], bool(e.get("use_ws", False)), e.get("ob_limit"))) for e in exs]
 
     # dashboard hooks
     def latest_fn(n: int):
