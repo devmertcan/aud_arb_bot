@@ -1,0 +1,6 @@
+pyproject.toml
+aud_arb_bot.egg-info/PKG-INFO
+aud_arb_bot.egg-info/SOURCES.txt
+aud_arb_bot.egg-info/dependency_links.txt
+aud_arb_bot.egg-info/requires.txt
+aud_arb_bot.egg-info/top_level.txt

@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: aud-arb-bot
+Version: 0.1.0
+Summary: AUD cross-exchange and triangular arbitrage detector (Milestone 1)
+Requires-Python: >=3.11
+Requires-Dist: ccxt>=4.3.78
+Requires-Dist: orjson>=3.10.7
+Requires-Dist: pydantic>=2.8.2
+Requires-Dist: pandas>=2.2.2
+Requires-Dist: pyyaml>=6.0.2
+Requires-Dist: fastapi>=0.114.1
+Requires-Dist: uvicorn>=0.30.6
+Requires-Dist: aiofiles>=24.1.0
+Requires-Dist: rich>=13.8.1
+Requires-Dist: uvloop>=0.20.0; platform_system != "Windows"
