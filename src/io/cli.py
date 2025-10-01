@@ -8,10 +8,10 @@ from core.utils import now_s
 from md.aggregator import Aggregator
 from md.ws_client import run_ws_exchange
 from md.rest_client import run_rest_exchange
-from io.csv_sink import CsvSink
+from src.io.csv_sink import CsvSink
 from arb.engine import Detector
 from arb.triangular import TriDetector
-from io.dashboard_api import make_app
+from src.io.dashboard_api import make_app
 import uvicorn
 
 ROOT = Path(__file__).resolve().parents[1]
