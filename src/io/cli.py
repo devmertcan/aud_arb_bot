@@ -1,10 +1,3 @@
-
-import ccxt
-try:
-    import ccxt.pro as ccxtpro
-except Exception:
-    ccxtpro = None
-
 from __future__ import annotations
 import asyncio, yaml
 from pathlib import Path
@@ -21,6 +14,11 @@ from arb.triangular import TriDetector
 from src.io.dashboard_api import make_app
 import uvicorn
 
+import ccxt
+try:
+    import ccxt.pro as ccxtpro
+except Exception:
+    ccxtpro = None
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "config"
