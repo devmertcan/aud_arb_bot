@@ -1,0 +1,24 @@
+[project]
+name = "aud-arb-bot"
+version = "0.1.0"
+description = "AUD cross-exchange and triangular arbitrage detector (Milestone 1)"
+requires-python = ">=3.11"
+dependencies = [
+  "ccxt>=4.3.78",
+  "orjson>=3.10.7",
+  "pydantic>=2.8.2",
+  "pandas>=2.2.2",
+  "pyyaml>=6.0.2",
+  "fastapi>=0.114.1",
+  "uvicorn>=0.30.6",
+  "aiofiles>=24.1.0",
+  "rich>=13.8.1",
+  "uvloop>=0.20.0; platform_system != 'Windows'"
+]
+# Optional: uncomment if you have a ccxt.pro license and wheel available
+# [project.optional-dependencies]
+# pro = ["ccxtpro>=0.10.112"]
+
+[tool.uvicorn]
+factory = true
+reload = true
